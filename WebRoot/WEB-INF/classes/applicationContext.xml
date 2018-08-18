@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.0.xsd
+	http://www.springframework.org/schema/mvc
+	http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+	">
+	
+	<!-- 启动注释功能 ，设置这个之后可以不用在该文件中配置， 可以在代码中设置@xxx注释 ，目前代码中我们没有使用
+	如： @Resource、 @Antowired、@Required、@PersistenceContext、@ PostConstruct、@ PreDestroy 等-->
+	<context:annotation-config/>
+	
+	<!-- 获取本地的属性配置文件 config.properties-->
+	<context:property-placeholder location="classpath:config.properties"/>
+	
+	<!--配置数据源 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${dataSource.driverClassName}"/>
+        <property name="jdbcUrl" value="${dataSource.url}"/>
+        <property name="user" value="${dataSource.username}"/>
+        <property name="password"  value="${dataSource.password}"/>
+        <!-- 指定连接数据库连接池的最小连接数 -->
+        <property name="minPoolSize" value="10" />
+        <!-- 指定连接数据库连接池的最大连接数 -->
+        <property name="maxPoolSize" value="30" />
+        <!-- 指定连接数据库连接池的连接的最大空闲时间 -->
+        <property name="maxIdleTime" value="1800" />
+        <property name="acquireIncrement" value="2" />
+        <property name="maxStatements" value="0" />
+        <!-- 指定连接数据库连接池的初始化连接数 -->
+        <property name="initialPoolSize" value="5" />
+        <property name="idleConnectionTestPeriod" value="1800" />
+        <property name="acquireRetryAttempts" value="30" />
+        <property name="breakAfterAcquireFailure" value="true" />
+        <property name="testConnectionOnCheckout" value="false" />
+	</bean>
+	 <!-- spring和MyBatis完美整合，不需要mybatis的配置映射文件 -->  
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">  
+        <property name="dataSource" ref="dataSource" />  
+        <!-- 自动扫描mapping.xml文件 -->  
+        <property name="mapperLocations" value="classpath:com/xq/mvc/dao/mapping/*.xml"></property>  
+    </bean>  
+	<!-- Dao接口所在的包名 spring会自动查找器下的类 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.xq.mvc.dao"/>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+	</bean>
+	
+	<!-- 声明spring事务处理器 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!-- 配置事务属性 -->
+     <tx:advice id="txAdvice"  transaction-manager="transactionManager">
+        <!-- 定义事务传播属性 -->
+        <tx:attributes>
+            <tx:method name="add*" propagation="REQUIRED" />
+            <tx:method name="insert*" propagation="REQUIRED"/>
+            <tx:method name="save*" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED"/>
+            <tx:method name="delete*" propagation="REQUIRED"/>
+            <!-- <tx:method name="*" propagation="REQUIRED" />-->
+        </tx:attributes>
+    </tx:advice>
+    
+	
+	<bean id="userService" class="com.xq.mvc.service.impl.UserServiceImpl">
+	</bean>
+    
+    
+    
+    
+</beans>
